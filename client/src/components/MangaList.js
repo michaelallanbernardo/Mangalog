@@ -6,25 +6,96 @@ function MangaList({ token }) {
   const [mangas, setMangas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
+  
+  // Filter and sort state
+  const [filters, setFilters] = useState({
+    status: [],
+    minRating: 0,
+    maxRating: 5,
+    sortBy: 'createdAt',
+    sortOrder: 'desc',
+    page: 1,
+    limit: 12,
+    search: '',
+  });
+
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: 12,
+    total: 0,
+    pages: 1,
+  });
+
   const [editingId, setEditingId] = useState(null);
   const [editData, setEditData] = useState(null);
 
+  // Fetch mangas whenever filters change
   useEffect(() => {
     fetchMangas();
-  }, [token]);
+  }, [token, filters]);
 
   const fetchMangas = async () => {
     try {
       setLoading(true);
-      const data = await mangaAPI.getAll(token);
-      setMangas(data);
+      const response = await mangaAPI.getFiltered(filters, token);
+      setMangas(response.data);
+      setPagination(response.pagination);
       setError('');
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStatusToggle = (status) => {
+    setFilters(prev => {
+      const newStatuses = prev.status.includes(status)
+        ? prev.status.filter(s => s !== status)
+        : [...prev.status, status];
+      return { ...prev, status: newStatuses, page: 1 };
+    });
+  };
+
+  const handleRatingChange = (e) => {
+    const [min, max] = e.target.value.split('-');
+    setFilters(prev => ({
+      ...prev,
+      minRating: min === 'all' ? 0 : parseInt(min),
+      maxRating: max === 'all' ? 5 : parseInt(max),
+      page: 1,
+    }));
+  };
+
+  const handleSortChange = (e) => {
+    const [sortBy, sortOrder] = e.target.value.split('-');
+    setFilters(prev => ({
+      ...prev,
+      sortBy,
+      sortOrder,
+      page: 1,
+    }));
+  };
+
+  const handleSearchChange = (e) => {
+    setFilters(prev => ({
+      ...prev,
+      search: e.target.value,
+      page: 1,
+    }));
+  };
+
+  const handleResetFilters = () => {
+    setFilters({
+      status: [],
+      minRating: 0,
+      maxRating: 5,
+      sortBy: 'createdAt',
+      sortOrder: 'desc',
+      page: 1,
+      limit: 12,
+      search: '',
+    });
   };
 
   const handleEdit = (manga) => {
@@ -59,9 +130,10 @@ function MangaList({ token }) {
     }
   };
 
-  const filteredMangas = filterStatus === 'all' 
-    ? mangas 
-    : mangas.filter(m => m.status === filterStatus);
+  const handlePageChange = (newPage) => {
+    setFilters(prev => ({ ...prev, page: newPage }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const statusColors = {
     'reading': '#3498db',
@@ -71,89 +143,207 @@ function MangaList({ token }) {
     'plan-to-read': '#95a5a6'
   };
 
-  if (loading) return <div className="loading">Loading your manga...</div>;
+  if (loading && mangas.length === 0) return <div className="loading">Loading your manga...</div>;
 
   return (
     <div className="manga-container">
       <div className="manga-header">
         <h1>My Manga List</h1>
-        <span className="manga-count">{mangas.length} manga</span>
+        <span className="manga-count">{pagination.total} manga</span>
       </div>
 
       {error && <div className="error-message">{error}</div>}
 
-      <div className="filter-section">
-        <label htmlFor="status-filter">Filter by status:</label>
-        <select 
-          id="status-filter"
-          value={filterStatus} 
-          onChange={(e) => setFilterStatus(e.target.value)}
-        >
-          <option value="all">All</option>
-          <option value="reading">Reading</option>
-          <option value="completed">Completed</option>
-          <option value="on-hold">On Hold</option>
-          <option value="dropped">Dropped</option>
-          <option value="plan-to-read">Plan to Read</option>
-        </select>
+      {/* Filter Section */}
+      <div className="filter-panel">
+        <div className="filter-header">
+          <h3>Filters & Search</h3>
+          {(filters.status.length > 0 || filters.search || filters.minRating > 0 || filters.maxRating < 5 || filters.sortBy !== 'createdAt') && (
+            <button onClick={handleResetFilters} className="btn-reset-filters">
+              Reset Filters
+            </button>
+          )}
+        </div>
+
+        {/* Search */}
+        <div className="filter-group">
+          <label htmlFor="search-input">Search by Title or Author</label>
+          <input
+            id="search-input"
+            type="text"
+            placeholder="Search..."
+            value={filters.search}
+            onChange={handleSearchChange}
+            className="search-input-filter"
+          />
+        </div>
+
+        {/* Status Filter */}
+        <div className="filter-group">
+          <label>Status</label>
+          <div className="checkbox-group">
+            {['reading', 'completed', 'on-hold', 'dropped', 'plan-to-read'].map(status => (
+              <label key={status} className="checkbox-label">
+                <input
+                  type="checkbox"
+                  checked={filters.status.includes(status)}
+                  onChange={() => handleStatusToggle(status)}
+                />
+                <span>{status.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        {/* Rating Filter */}
+        <div className="filter-group">
+          <label htmlFor="rating-filter">Rating Range</label>
+          <select 
+            id="rating-filter"
+            value={`${filters.minRating}-${filters.maxRating}`}
+            onChange={handleRatingChange}
+            className="select-filter"
+          >
+            <option value="0-5">All Ratings</option>
+            <option value="4-5">4+ Stars</option>
+            <option value="3-5">3+ Stars</option>
+            <option value="2-5">2+ Stars</option>
+            <option value="1-5">1+ Stars</option>
+            <option value="5-5">5 Stars Only</option>
+            <option value="0-0">Not Rated</option>
+          </select>
+        </div>
+
+        {/* Sort Options */}
+        <div className="filter-group">
+          <label htmlFor="sort-filter">Sort By</label>
+          <select 
+            id="sort-filter"
+            value={`${filters.sortBy}-${filters.sortOrder}`}
+            onChange={handleSortChange}
+            className="select-filter"
+          >
+            <option value="createdAt-desc">Date Added (Newest)</option>
+            <option value="createdAt-asc">Date Added (Oldest)</option>
+            <option value="title-asc">Title (A-Z)</option>
+            <option value="title-desc">Title (Z-A)</option>
+            <option value="rating-desc">Rating (Highest)</option>
+            <option value="rating-asc">Rating (Lowest)</option>
+            <option value="currentChapter-desc">Progress (Most Read)</option>
+            <option value="currentChapter-asc">Progress (Least Read)</option>
+          </select>
+        </div>
       </div>
 
-      {filteredMangas.length === 0 ? (
-        <div className="empty-state">No manga found. Browse and add from the Browse tab!</div>
+      {/* Results Count */}
+      <div className="results-info">
+        Showing {mangas.length > 0 ? (filters.page - 1) * filters.limit + 1 : 0}-{Math.min(filters.page * filters.limit, pagination.total)} of {pagination.total} manga
+      </div>
+
+      {mangas.length === 0 ? (
+        <div className="empty-state">
+          {pagination.total === 0 ? (
+            <>
+              <p>No manga found. Browse and add from the Browse tab!</p>
+              {(filters.status.length > 0 || filters.search || filters.minRating > 0 || filters.maxRating < 5) && (
+                <button onClick={handleResetFilters} className="btn-secondary">
+                  Clear Filters
+                </button>
+              )}
+            </>
+          ) : (
+            <p>No manga matches your filters.</p>
+          )}
+        </div>
       ) : (
-        <div className="manga-grid">
-          {filteredMangas.map((manga) => (
-            <div key={manga._id} className="manga-card">
-              <div className="manga-header-card">
-                <h3>{manga.title}</h3>
-                <span 
-                  className="status-badge" 
-                  style={{ backgroundColor: statusColors[manga.status] }}
-                >
-                  {manga.status}
-                </span>
-              </div>
-              <p className="manga-author">by {manga.author}</p>
-              
-              <div className="manga-details">
-                <div className="detail-item">
-                  <span className="label">Progress:</span>
-                  <span>
-                    {manga.chapters > 0 
-                      ? `${manga.currentChapter}/${manga.chapters}` 
-                      : `Ch. ${manga.currentChapter}`
-                    }
+        <>
+          <div className="manga-grid">
+            {mangas.map((manga) => (
+              <div key={manga._id} className="manga-card">
+                <div className="manga-header-card">
+                  <h3>{manga.title}</h3>
+                  <span 
+                    className="status-badge" 
+                    style={{ backgroundColor: statusColors[manga.status] }}
+                  >
+                    {manga.status}
                   </span>
                 </div>
-                {manga.rating && (
+                <p className="manga-author">by {manga.author}</p>
+                
+                <div className="manga-details">
                   <div className="detail-item">
-                    <span className="label">Rating:</span>
-                    <span>{'⭐'.repeat(manga.rating)}</span>
+                    <span className="label">Progress:</span>
+                    <span>
+                      {manga.chapters > 0 
+                        ? `${manga.currentChapter}/${manga.chapters}` 
+                        : `Ch. ${manga.currentChapter}`
+                      }
+                    </span>
                   </div>
+                  {manga.rating && (
+                    <div className="detail-item">
+                      <span className="label">Rating:</span>
+                      <span>{'⭐'.repeat(manga.rating)}</span>
+                    </div>
+                  )}
+                </div>
+
+                {manga.notes && (
+                  <p className="manga-notes">{manga.notes}</p>
                 )}
+
+                <div className="manga-actions">
+                  <button 
+                    className="btn-secondary"
+                    onClick={() => handleEdit(manga)}
+                  >
+                    Edit
+                  </button>
+                  <button 
+                    className="btn-danger"
+                    onClick={() => handleDelete(manga._id)}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {pagination.pages > 1 && (
+            <div className="pagination">
+              <button
+                onClick={() => handlePageChange(pagination.page - 1)}
+                disabled={pagination.page === 1}
+                className="btn-pagination"
+              >
+                ← Previous
+              </button>
+
+              <div className="page-numbers">
+                {Array.from({ length: pagination.pages }, (_, i) => i + 1).map(page => (
+                  <button
+                    key={page}
+                    onClick={() => handlePageChange(page)}
+                    className={`page-number ${pagination.page === page ? 'active' : ''}`}
+                  >
+                    {page}
+                  </button>
+                ))}
               </div>
 
-              {manga.notes && (
-                <p className="manga-notes">{manga.notes}</p>
-              )}
-
-              <div className="manga-actions">
-                <button 
-                  className="btn-secondary"
-                  onClick={() => handleEdit(manga)}
-                >
-                  Edit
-                </button>
-                <button 
-                  className="btn-danger"
-                  onClick={() => handleDelete(manga._id)}
-                >
-                  Remove
-                </button>
-              </div>
+              <button
+                onClick={() => handlePageChange(pagination.page + 1)}
+                disabled={pagination.page === pagination.pages}
+                className="btn-pagination"
+              >
+                Next →
+              </button>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
 
       {editingId && editData && (

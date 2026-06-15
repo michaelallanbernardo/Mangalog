@@ -305,3 +305,248 @@
   margin-bottom: 1rem;
   border-left: 4px solid #c33;
 }
+
+/* Filter Panel Styles */
+.filter-panel {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.filter-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.btn-reset-filters {
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.btn-reset-filters:hover {
+  background-color: #c0392b;
+}
+
+.filter-group {
+  margin-bottom: 1.5rem;
+}
+
+.filter-group:last-child {
+  margin-bottom: 0;
+}
+
+.filter-group label {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.search-input-filter {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.search-input-filter:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.select-filter {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+  background-color: white;
+  cursor: pointer;
+  box-sizing: border-box;
+  transition: border-color 0.3s;
+}
+
+.select-filter:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.checkbox-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+  color: #555;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #667eea;
+}
+
+.checkbox-label span {
+  font-size: 0.95rem;
+}
+
+.checkbox-label:hover span {
+  color: #333;
+}
+
+/* Results Info */
+.results-info {
+  color: #666;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  padding: 0 1rem;
+}
+
+/* Pagination Styles */
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 2rem 1rem;
+}
+
+.btn-pagination {
+  background-color: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.btn-pagination:hover:not(:disabled) {
+  background-color: #5568d3;
+}
+
+.btn-pagination:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.page-numbers {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.page-number {
+  background-color: white;
+  color: #667eea;
+  border: 1px solid #667eea;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+  min-width: 40px;
+}
+
+.page-number:hover {
+  background-color: #667eea;
+  color: white;
+}
+
+.page-number.active {
+  background-color: #667eea;
+  color: white;
+}
+
+/* Empty State with Button */
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #999;
+  font-size: 1.2rem;
+}
+
+.empty-state p {
+  margin: 0 0 1rem 0;
+}
+
+.empty-state .btn-secondary {
+  max-width: 200px;
+  margin: 0 auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .manga-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+
+  .filter-panel {
+    padding: 1rem;
+  }
+
+  .checkbox-group {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  }
+
+  .manga-details {
+    grid-template-columns: 1fr;
+  }
+
+  .pagination {
+    gap: 0.25rem;
+    flex-wrap: wrap;
+  }
+
+  .page-numbers {
+    gap: 0.1rem;
+  }
+
+  .page-number {
+    padding: 0.4rem 0.6rem;
+    font-size: 0.9rem;
+    min-width: 35px;
+  }
+
+  .btn-pagination {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+}

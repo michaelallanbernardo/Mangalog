@@ -35,11 +35,75 @@ exports.createManga = async (req, res) => {
   }
 };
 
-// GET ALL USER MANGA
+// GET ALL USER MANGA WITH FILTERING, SORTING, AND PAGINATION
 exports.getUserManga = async (req, res) => {
   try {
-    const mangas = await Manga.find({ userId: req.userId }).sort({ createdAt: -1 });
-    res.json(mangas);
+    const {
+      status,
+      minRating = 0,
+      maxRating = 5,
+      sortBy = "createdAt",
+      sortOrder = "desc",
+      page = 1,
+      limit = 10,
+      search = "",
+    } = req.query;
+
+    // Build filter object
+    const filter = { userId: req.userId };
+
+    // Apply status filter
+    if (status) {
+      const statuses = status.split(",").filter((s) => s.trim());
+      if (statuses.length > 0) {
+        filter.status = { $in: statuses };
+      }
+    }
+
+    // Apply rating filter
+    const minRatingNum = parseFloat(minRating);
+    const maxRatingNum = parseFloat(maxRating);
+    if (minRatingNum > 0 || maxRatingNum < 5) {
+      filter.rating = { $gte: minRatingNum, $lte: maxRatingNum };
+    }
+
+    // Apply search filter
+    if (search.trim()) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { author: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Build sort object
+    const sortObj = {};
+    const validSortFields = ["title", "rating", "createdAt", "currentChapter"];
+    const field = validSortFields.includes(sortBy) ? sortBy : "createdAt";
+    sortObj[field] = sortOrder === "asc" ? 1 : -1;
+
+    // Calculate pagination
+    const pageNum = Math.max(1, parseInt(page));
+    const limitNum = Math.max(1, Math.min(100, parseInt(limit)));
+    const skip = (pageNum - 1) * limitNum;
+
+    // Fetch total count for pagination info
+    const total = await Manga.countDocuments(filter);
+
+    // Fetch manga with pagination
+    const mangas = await Manga.find(filter)
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limitNum);
+
+    res.json({
+      data: mangas,
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        pages: Math.ceil(total / limitNum),
+      },
+    });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch manga list" });
   }

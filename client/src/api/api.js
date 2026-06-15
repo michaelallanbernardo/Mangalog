@@ -42,7 +42,44 @@ export const authAPI = {
 // Manga API calls
 export const mangaAPI = {
   getAll: async (token) => {
-    const response = await fetch(`${API_URL}/manga`, {
+    // For backward compatibility, fetch all manga without pagination
+    const response = await fetch(`${API_URL}/manga?limit=1000`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error("Failed to fetch manga");
+    const result = await response.json();
+    // Return just the data array for backward compatibility
+    return result.data || result;
+  },
+
+  getFiltered: async (filters, token) => {
+    const params = new URLSearchParams();
+    if (filters.status && filters.status.length > 0) {
+      params.append("status", filters.status.join(","));
+    }
+    if (filters.minRating !== undefined) {
+      params.append("minRating", filters.minRating);
+    }
+    if (filters.maxRating !== undefined) {
+      params.append("maxRating", filters.maxRating);
+    }
+    if (filters.sortBy) {
+      params.append("sortBy", filters.sortBy);
+    }
+    if (filters.sortOrder) {
+      params.append("sortOrder", filters.sortOrder);
+    }
+    if (filters.page) {
+      params.append("page", filters.page);
+    }
+    if (filters.limit) {
+      params.append("limit", filters.limit);
+    }
+    if (filters.search) {
+      params.append("search", filters.search);
+    }
+
+    const response = await fetch(`${API_URL}/manga?${params.toString()}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!response.ok) throw new Error("Failed to fetch manga");
