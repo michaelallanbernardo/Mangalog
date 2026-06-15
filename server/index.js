@@ -5,6 +5,8 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const authRoutes = require("./routes/authRoutes");
+const mangaRoutes = require("./routes/mangaRoutes");
+const browseRoutes = require("./routes/browseRoutes");
 require("dotenv").config();
 
 
@@ -13,6 +15,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/manga", mangaRoutes);
+app.use("/api/browse", browseRoutes);
 
 app.get("/api/status", (req, res) => {
   res.json({ message: "MangaLog API is running" });
