@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+ const mongoose = require("mongoose");
 
 const mangaSchema = new mongoose.Schema(
   {
@@ -38,15 +38,6 @@ const mangaSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
-);
-
-// Prevent duplicate AniList imports for the same user while still allowing manual entries without anilistId.
-mangaSchema.index(
-  { userId: 1, anilistId: 1 },
-  {
-    unique: true,
-    partialFilterExpression: { anilistId: { $type: "number" } },
-  }
 );
 
 module.exports = mongoose.model("Manga", mangaSchema);
