@@ -14,8 +14,7 @@ function Browse({ token, searchQuery, onMangaAdded }) {
 
   const fetchUserMangaIds = useCallback(async () => {
     try {
-      const mangas = await mangaAPI.getAll(token);
-      const ids = new Set(mangas.map((manga) => manga.anilistId).filter(Boolean));
+      const ids = new Set(await mangaAPI.getAnilistIds(token));
       setUserMangaIds(ids);
     } catch (err) {
       console.error('Failed to fetch user manga:', err);

@@ -4,6 +4,16 @@ import './MangaList.css';
 
 function MangaList({ token }) {
   const [mangas, setMangas] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    reading: 0,
+    completed: 0,
+    onHold: 0,
+    dropped: 0,
+    planToRead: 0,
+    chaptersRead: 0,
+    totalChapters: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [filters, setFilters] = useState({
@@ -12,7 +22,9 @@ function MangaList({ token }) {
     sortOrder: 'desc',
     page: 1,
     limit: 12,
+    search: '',
   });
+  const [searchInput, setSearchInput] = useState('');
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 12,
@@ -36,9 +48,28 @@ function MangaList({ token }) {
     }
   }, [filters, token]);
 
+  const fetchStats = useCallback(async () => {
+    try {
+      const result = await mangaAPI.getStats(token);
+      setStats({
+        total: result.total || 0,
+        reading: result.reading || 0,
+        completed: result.completed || 0,
+        onHold: result.onHold || 0,
+        dropped: result.dropped || 0,
+        planToRead: result.planToRead || 0,
+        chaptersRead: result.chaptersRead || 0,
+        totalChapters: result.totalChapters || 0,
+      });
+    } catch (err) {
+      console.error('Failed to fetch manga stats:', err);
+    }
+  }, [token]);
+
   useEffect(() => {
     fetchMangas();
-  }, [fetchMangas]);
+    fetchStats();
+  }, [fetchMangas, fetchStats]);
 
   const handleStatusToggle = (status) => {
     setFilters((prev) => {
@@ -62,13 +93,33 @@ function MangaList({ token }) {
   };
 
   const handleResetFilters = () => {
+    setSearchInput('');
     setFilters({
       status: [],
       sortBy: 'createdAt',
       sortOrder: 'desc',
       page: 1,
       limit: 12,
+      search: '',
     });
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    setFilters((prev) => ({
+      ...prev,
+      search: searchInput.trim(),
+      page: 1,
+    }));
+  };
+
+  const handleSearchClear = () => {
+    setSearchInput('');
+    setFilters((prev) => ({
+      ...prev,
+      search: '',
+      page: 1,
+    }));
   };
 
   const handleEdit = (manga) => {
@@ -86,6 +137,7 @@ function MangaList({ token }) {
       setEditingId(null);
       setEditData(null);
       fetchMangas();
+      fetchStats();
     } catch (err) {
       setError(err.message);
     }
@@ -99,6 +151,7 @@ function MangaList({ token }) {
     try {
       await mangaAPI.delete(id, token);
       fetchMangas();
+      fetchStats();
     } catch (err) {
       setError(err.message);
     }
@@ -124,8 +177,46 @@ function MangaList({ token }) {
   return (
     <div className="manga-container">
       <div className="manga-header">
-        <h1>My Manga List</h1>
-        <span className="manga-count">{pagination.total} manga</span>
+        <div>
+          <h1>My Manga List</h1>
+          <p className="manga-subtitle">Track your reading progress and status at a glance.</p>
+        </div>
+        <div className="header-actions">
+          <span className="manga-count">{stats.total} manga</span>
+        </div>
+      </div>
+
+      <div className="stats-grid">
+        <div className="stat-card stat-card-primary">
+          <span className="stat-label">Total</span>
+          <strong className="stat-value">{stats.total}</strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Reading</span>
+          <strong className="stat-value">{stats.reading}</strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Completed</span>
+          <strong className="stat-value">{stats.completed}</strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">On Hold</span>
+          <strong className="stat-value">{stats.onHold}</strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Dropped</span>
+          <strong className="stat-value">{stats.dropped}</strong>
+        </div>
+        <div className="stat-card">
+          <span className="stat-label">Plan to Read</span>
+          <strong className="stat-value">{stats.planToRead}</strong>
+        </div>
+        <div className="stat-card stat-card-wide">
+          <span className="stat-label">Chapters Read</span>
+          <strong className="stat-value">
+            {stats.chaptersRead} / {stats.totalChapters || 0}
+          </strong>
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -133,12 +224,35 @@ function MangaList({ token }) {
       <div className="filter-panel">
         <div className="filter-header">
           {(filters.status.length > 0 ||
-            filters.sortBy !== 'createdAt') && (
+            filters.sortBy !== 'createdAt' ||
+            filters.search) && (
             <button onClick={handleResetFilters} className="btn-reset-filters">
               Reset Filters
             </button>
           )}
         </div>
+
+        <form className="filter-group" onSubmit={handleSearchSubmit}>
+          <label htmlFor="list-search">Search my list</label>
+          <div className="search-row">
+            <input
+              id="list-search"
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search title or author"
+              className="search-input-filter"
+            />
+            <button type="submit" className="btn-secondary">
+              Search
+            </button>
+            {searchInput || filters.search ? (
+              <button type="button" onClick={handleSearchClear} className="btn-secondary">
+                Clear
+              </button>
+            ) : null}
+          </div>
+        </form>
 
         <div className="filter-group">
           <div className="checkbox-group">
@@ -175,15 +289,21 @@ function MangaList({ token }) {
       <div className="results-info">
         Showing {mangas.length > 0 ? (filters.page - 1) * filters.limit + 1 : 0}-
         {Math.min(filters.page * filters.limit, pagination.total)} of {pagination.total} manga
+        {filters.search ? ` for "${filters.search}"` : ''}
       </div>
 
       {mangas.length === 0 ? (
         <div className="empty-state">
           {pagination.total === 0 ? (
             <>
-              <p>No manga found. Add one or browse the Browse tab.</p>
+              <p>
+                {filters.search
+                  ? `No manga matched "${filters.search}".`
+                  : 'No manga found. Add one or browse the Browse tab.'}
+              </p>
               {(filters.status.length > 0 ||
-                filters.sortBy !== 'createdAt') && (
+                filters.sortBy !== 'createdAt' ||
+                filters.search) && (
                 <button onClick={handleResetFilters} className="btn-secondary">
                   Clear Filters
                 </button>

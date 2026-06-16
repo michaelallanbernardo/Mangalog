@@ -4,6 +4,7 @@ import Login from './components/Login';
 import Register from './components/Register';
 import MangaList from './components/MangaList';
 import Browse from './components/Browse';
+import { API_URL, authAPI } from './api/api';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -13,18 +14,81 @@ function App() {
   const [refreshList, setRefreshList] = useState(0);
   const [browseSearchInput, setBrowseSearchInput] = useState('');
   const [browseSearchQuery, setBrowseSearchQuery] = useState('');
+  const [apiStatus, setApiStatus] = useState('checking');
 
   useEffect(() => {
-    // Check if user is already logged in
-    const savedToken = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
-    
-    if (savedToken && savedUser) {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-      setView('manga');
-    }
-    setLoading(false);
+    let isMounted = true;
+
+    const bootstrapSession = async () => {
+      const savedToken = localStorage.getItem('token');
+      const savedUser = localStorage.getItem('user');
+
+      if (!savedToken || !savedUser) {
+        if (isMounted) {
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        const currentUser = await authAPI.getMe(savedToken);
+
+        if (!isMounted) {
+          return;
+        }
+
+        setToken(savedToken);
+        setUser(currentUser);
+        localStorage.setItem('user', JSON.stringify(currentUser));
+        setView('manga');
+      } catch (err) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+
+        if (isMounted) {
+          setToken(null);
+          setUser(null);
+          setView('login');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    bootstrapSession();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const checkApiStatus = async () => {
+      try {
+        const response = await fetch(`${API_URL}/status`);
+        if (!response.ok) {
+          throw new Error('API health check failed');
+        }
+
+        if (isMounted) {
+          setApiStatus('online');
+        }
+      } catch (err) {
+        if (isMounted) {
+          setApiStatus('offline');
+        }
+      }
+    };
+
+    checkApiStatus();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleLoginSuccess = (userData, newToken) => {
@@ -100,6 +164,13 @@ function App() {
               )}
             </form>
             <div className="navbar-user">
+              <span
+                className={`api-status api-status-${apiStatus}`}
+                title="Backend API status"
+              >
+                <span className="api-status-dot" />
+                {apiStatus === 'checking' ? 'Checking API' : apiStatus === 'online' ? 'API online' : 'API offline'}
+              </span>
               <span>Welcome, {user.username}!</span>
               <button className="btn-logout" onClick={handleLogout}>
                 Logout

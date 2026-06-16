@@ -4,6 +4,8 @@ const router = express.Router();
 const {
   createManga,
   getUserManga,
+  getUserStats,
+  getUserMangaIds,
   getMangaById,
   updateManga,
   deleteManga,
@@ -15,6 +17,8 @@ router.use(authMiddleware);
 
 router.post("/", createManga);
 router.get("/", getUserManga);
+router.get("/stats", getUserStats);
+router.get("/ids", getUserMangaIds);
 router.get("/:id", getMangaById);
 router.put("/:id", updateManga);
 router.delete("/:id", deleteManga);

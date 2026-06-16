@@ -1,8 +1,13 @@
 import { render, screen } from '@testing-library/react';
 import App from './App';
 
-test('renders learn react link', () => {
+beforeEach(() => {
+  localStorage.clear();
+});
+
+test('shows the login screen when no session is saved', () => {
   render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+
+  expect(screen.getByRole('heading', { name: /login/i })).toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /register here/i })).toBeInTheDocument();
 });

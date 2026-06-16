@@ -41,27 +41,28 @@ export const authAPI = {
 
 // Manga API calls
 export const mangaAPI = {
-  getAll: async (token) => {
-    // For backward compatibility, fetch all manga without pagination
-    const response = await fetch(`${API_URL}/manga?limit=1000`, {
+  getAnilistIds: async (token) => {
+    const response = await fetch(`${API_URL}/manga/ids`, {
       headers: { Authorization: `Bearer ${token}` },
     });
-    if (!response.ok) throw new Error("Failed to fetch manga");
+    if (!response.ok) throw new Error("Failed to fetch manga ids");
     const result = await response.json();
-    // Return just the data array for backward compatibility
-    return result.data || result;
+    return result.data || [];
+  },
+
+  getStats: async (token) => {
+    const response = await fetch(`${API_URL}/manga/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) throw new Error("Failed to fetch manga stats");
+    const result = await response.json();
+    return result.data || {};
   },
 
   getFiltered: async (filters, token) => {
     const params = new URLSearchParams();
     if (filters.status && filters.status.length > 0) {
       params.append("status", filters.status.join(","));
-    }
-    if (filters.minRating !== undefined) {
-      params.append("minRating", filters.minRating);
-    }
-    if (filters.maxRating !== undefined) {
-      params.append("maxRating", filters.maxRating);
     }
     if (filters.sortBy) {
       params.append("sortBy", filters.sortBy);

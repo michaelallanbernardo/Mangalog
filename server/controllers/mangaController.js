@@ -11,7 +11,7 @@ exports.createManga = async (req, res) => {
 
     // Check if manga already exists in user's list
     if (anilistId) {
-      const existing = await Manga.findOne({ userId: req.userId, anilistId });
+      const existing = await Manga.findOne({ userId: req.userId, anilistId: Number(anilistId) });
       if (existing) {
         return res.status(409).json({ message: "This manga is already in your list" });
       }
@@ -25,11 +25,14 @@ exports.createManga = async (req, res) => {
       chapters: chapters || 0,
       currentChapter: currentChapter || 0,
       notes: notes || "",
-      anilistId: anilistId || null,
+      anilistId: anilistId ? Number(anilistId) : null,
     });
 
     res.status(201).json(manga);
   } catch (err) {
+    if (err?.code === 11000) {
+      return res.status(409).json({ message: "This manga is already in your list" });
+    }
     res.status(500).json({ error: "Failed to create manga" });
   }
 };
@@ -96,6 +99,69 @@ exports.getUserManga = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch manga list" });
+  }
+};
+
+// GET USER LIST STATS
+exports.getUserStats = async (req, res) => {
+  try {
+    const [stats] = await Manga.aggregate([
+      { $match: { userId: req.userId } },
+      {
+        $group: {
+          _id: null,
+          total: { $sum: 1 },
+          reading: {
+            $sum: { $cond: [{ $eq: ["$status", "reading"] }, 1, 0] },
+          },
+          completed: {
+            $sum: { $cond: [{ $eq: ["$status", "completed"] }, 1, 0] },
+          },
+          onHold: {
+            $sum: { $cond: [{ $eq: ["$status", "on-hold"] }, 1, 0] },
+          },
+          dropped: {
+            $sum: { $cond: [{ $eq: ["$status", "dropped"] }, 1, 0] },
+          },
+          planToRead: {
+            $sum: { $cond: [{ $eq: ["$status", "plan-to-read"] }, 1, 0] },
+          },
+          chaptersRead: { $sum: { $ifNull: ["$currentChapter", 0] } },
+          totalChapters: { $sum: { $ifNull: ["$chapters", 0] } },
+        },
+      },
+    ]);
+
+    res.json({
+      data: {
+        total: stats?.total || 0,
+        reading: stats?.reading || 0,
+        completed: stats?.completed || 0,
+        onHold: stats?.onHold || 0,
+        dropped: stats?.dropped || 0,
+        planToRead: stats?.planToRead || 0,
+        chaptersRead: stats?.chaptersRead || 0,
+        totalChapters: stats?.totalChapters || 0,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch manga stats" });
+  }
+};
+
+// GET ALL USER ANILIST IDS
+exports.getUserMangaIds = async (req, res) => {
+  try {
+    const mangas = await Manga.find(
+      { userId: req.userId, anilistId: { $ne: null } },
+      { anilistId: 1, _id: 0 }
+    );
+
+    res.json({
+      data: mangas.map((manga) => manga.anilistId),
+    });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to fetch manga ids" });
   }
 };
 
