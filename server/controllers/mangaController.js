@@ -3,7 +3,7 @@ const Manga = require("../models/Manga");
 // CREATE
 exports.createManga = async (req, res) => {
   try {
-    const { title, author, status, chapters, currentChapter, rating, notes, anilistId } = req.body;
+    const { title, author, status, chapters, currentChapter, notes, anilistId } = req.body;
 
     if (!title || !author) {
       return res.status(400).json({ message: "Title and author are required" });
@@ -24,7 +24,6 @@ exports.createManga = async (req, res) => {
       status: status || "plan-to-read",
       chapters: chapters || 0,
       currentChapter: currentChapter || 0,
-      rating: rating || null,
       notes: notes || "",
       anilistId: anilistId || null,
     });
@@ -40,8 +39,6 @@ exports.getUserManga = async (req, res) => {
   try {
     const {
       status,
-      minRating = 0,
-      maxRating = 5,
       sortBy = "createdAt",
       sortOrder = "desc",
       page = 1,
@@ -60,13 +57,6 @@ exports.getUserManga = async (req, res) => {
       }
     }
 
-    // Apply rating filter
-    const minRatingNum = parseFloat(minRating);
-    const maxRatingNum = parseFloat(maxRating);
-    if (minRatingNum > 0 || maxRatingNum < 5) {
-      filter.rating = { $gte: minRatingNum, $lte: maxRatingNum };
-    }
-
     // Apply search filter
     if (search.trim()) {
       filter.$or = [
@@ -77,7 +67,7 @@ exports.getUserManga = async (req, res) => {
 
     // Build sort object
     const sortObj = {};
-    const validSortFields = ["title", "rating", "createdAt", "currentChapter"];
+    const validSortFields = ["title", "createdAt", "currentChapter"];
     const field = validSortFields.includes(sortBy) ? sortBy : "createdAt";
     sortObj[field] = sortOrder === "asc" ? 1 : -1;
 
@@ -127,7 +117,7 @@ exports.getMangaById = async (req, res) => {
 // UPDATE MANGA
 exports.updateManga = async (req, res) => {
   try {
-    const { title, author, status, chapters, currentChapter, rating, notes } = req.body;
+    const { title, author, status, chapters, currentChapter, notes } = req.body;
 
     const manga = await Manga.findOne({ _id: req.params.id, userId: req.userId });
 
@@ -140,7 +130,6 @@ exports.updateManga = async (req, res) => {
     if (status) manga.status = status;
     if (chapters !== undefined) manga.chapters = chapters;
     if (currentChapter !== undefined) manga.currentChapter = currentChapter;
-    if (rating !== undefined) manga.rating = rating;
     if (notes !== undefined) manga.notes = notes;
 
     await manga.save();

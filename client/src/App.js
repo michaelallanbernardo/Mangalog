@@ -11,6 +11,8 @@ function App() {
   const [view, setView] = useState('login');
   const [loading, setLoading] = useState(true);
   const [refreshList, setRefreshList] = useState(0);
+  const [browseSearchInput, setBrowseSearchInput] = useState('');
+  const [browseSearchQuery, setBrowseSearchQuery] = useState('');
 
   useEffect(() => {
     // Check if user is already logged in
@@ -48,6 +50,18 @@ function App() {
     setView('manga');
   };
 
+  const handleBrowseSearchSubmit = (e) => {
+    e.preventDefault();
+    setBrowseSearchQuery(browseSearchInput.trim());
+    setView('browse');
+  };
+
+  const handleBrowseSearchClear = () => {
+    setBrowseSearchInput('');
+    setBrowseSearchQuery('');
+    setView('browse');
+  };
+
   if (loading) {
     return <div className="loading">Loading...</div>;
   }
@@ -57,7 +71,9 @@ function App() {
       {user && (
         <nav className="navbar">
           <div className="navbar-container">
-            <h1 className="navbar-title">MangaLog</h1>
+            <button className="navbar-title" onClick={() => setView('browse')}>
+              MangaLog
+            </button>
             <div className="navbar-nav">
               <button 
                 className={`nav-link ${view === 'manga' ? 'active' : ''}`}
@@ -65,13 +81,24 @@ function App() {
               >
                 My List
               </button>
-              <button 
-                className={`nav-link ${view === 'browse' ? 'active' : ''}`}
-                onClick={() => setView('browse')}
-              >
-                Browse
-              </button>
             </div>
+            <form className="navbar-search" onSubmit={handleBrowseSearchSubmit}>
+              <input
+                type="text"
+                value={browseSearchInput}
+                onChange={(e) => setBrowseSearchInput(e.target.value)}
+                placeholder="Search manga..."
+                className="navbar-search-input"
+              />
+              <button type="submit" className="navbar-search-button">
+                Search
+              </button>
+              {browseSearchInput && (
+                <button type="button" className="navbar-search-clear" onClick={handleBrowseSearchClear}>
+                  Clear
+                </button>
+              )}
+            </form>
             <div className="navbar-user">
               <span>Welcome, {user.username}!</span>
               <button className="btn-logout" onClick={handleLogout}>
@@ -122,7 +149,7 @@ function App() {
         )}
 
         {view === 'browse' && token && (
-          <Browse token={token} onMangaAdded={handleMangaAdded} />
+          <Browse token={token} searchQuery={browseSearchQuery} onMangaAdded={handleMangaAdded} />
         )}
       </main>
     </div>

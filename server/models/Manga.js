@@ -28,12 +28,6 @@ const mangaSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    rating: {
-      type: Number,
-      min: 0,
-      max: 5,
-      default: null,
-    },
     notes: {
       type: String,
       default: "",

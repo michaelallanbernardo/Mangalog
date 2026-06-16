@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import './MangaForm.css';
 
 function MangaForm({ onSubmit, editingId, mangas }) {
@@ -7,20 +7,18 @@ function MangaForm({ onSubmit, editingId, mangas }) {
   const [status, setStatus] = useState('plan-to-read');
   const [chapters, setChapters] = useState('');
   const [currentChapter, setCurrentChapter] = useState('');
-  const [rating, setRating] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (editingId && mangas) {
-      const manga = mangas.find(m => m._id === editingId);
+      const manga = mangas.find((m) => m._id === editingId);
       if (manga) {
         setTitle(manga.title);
         setAuthor(manga.author);
         setStatus(manga.status);
         setChapters(manga.chapters || '');
         setCurrentChapter(manga.currentChapter || '');
-        setRating(manga.rating || '');
         setNotes(manga.notes || '');
       }
     }
@@ -35,19 +33,16 @@ function MangaForm({ onSubmit, editingId, mangas }) {
         title,
         author,
         status,
-        chapters: chapters ? parseInt(chapters) : 0,
-        currentChapter: currentChapter ? parseInt(currentChapter) : 0,
-        rating: rating ? parseInt(rating) : null,
+        chapters: chapters ? parseInt(chapters, 10) : 0,
+        currentChapter: currentChapter ? parseInt(currentChapter, 10) : 0,
         notes,
       });
 
-      // Reset form
       setTitle('');
       setAuthor('');
       setStatus('plan-to-read');
       setChapters('');
       setCurrentChapter('');
-      setRating('');
       setNotes('');
     } finally {
       setLoading(false);
@@ -127,23 +122,6 @@ function MangaForm({ onSubmit, editingId, mangas }) {
               disabled={loading}
             />
           </div>
-
-          <div className="form-group">
-            <label htmlFor="rating">Rating (1-5)</label>
-            <select
-              id="rating"
-              value={rating}
-              onChange={(e) => setRating(e.target.value)}
-              disabled={loading}
-            >
-              <option value="">No rating</option>
-              <option value="1">1 ⭐</option>
-              <option value="2">2 ⭐</option>
-              <option value="3">3 ⭐</option>
-              <option value="4">4 ⭐</option>
-              <option value="5">5 ⭐</option>
-            </select>
-          </div>
         </div>
 
         <div className="form-group">
@@ -160,7 +138,7 @@ function MangaForm({ onSubmit, editingId, mangas }) {
 
         <div className="form-actions">
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Saving...' : (editingId ? 'Update' : 'Add')} Manga
+            {loading ? 'Saving...' : editingId ? 'Update' : 'Add'} Manga
           </button>
         </div>
       </form>
