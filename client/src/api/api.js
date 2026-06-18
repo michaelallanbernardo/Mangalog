@@ -1,5 +1,25 @@
 export const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
 
+const readErrorMessage = async (response, fallbackMessage) => {
+  const contentType = response.headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    try {
+      const error = await response.json();
+      return error.message || error.error || fallbackMessage;
+    } catch (err) {
+      return fallbackMessage;
+    }
+  }
+
+  try {
+    const text = await response.text();
+    return text || fallbackMessage;
+  } catch (err) {
+    return fallbackMessage;
+  }
+};
+
 // Auth API calls
 export const authAPI = {
   register: async (username, email, password) => {
@@ -9,8 +29,7 @@ export const authAPI = {
       body: JSON.stringify({ username, email, password }),
     });
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Registration failed");
+      throw new Error(await readErrorMessage(response, "Registration failed"));
     }
     return response.json();
   },
@@ -22,8 +41,7 @@ export const authAPI = {
       body: JSON.stringify({ email, password }),
     });
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Login failed");
+      throw new Error(await readErrorMessage(response, "Login failed"));
     }
     return response.json();
   },
@@ -105,8 +123,7 @@ export const mangaAPI = {
       body: JSON.stringify(mangaData),
     });
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to create manga");
+      throw new Error(await readErrorMessage(response, "Failed to create manga"));
     }
     return response.json();
   },
@@ -121,8 +138,7 @@ export const mangaAPI = {
       body: JSON.stringify(mangaData),
     });
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "Failed to update manga");
+      throw new Error(await readErrorMessage(response, "Failed to update manga"));
     }
     return response.json();
   },

@@ -273,6 +273,15 @@ main {
   color: #5568d3;
 }
 
+.section-kicker {
+  margin: 0 0 0.55rem;
+  color: #667eea;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+}
+
 .loading {
   display: flex;
   align-items: center;

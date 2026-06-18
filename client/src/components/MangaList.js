@@ -177,12 +177,16 @@ function MangaList({ token }) {
   return (
     <div className="manga-container">
       <div className="manga-header">
-        <div>
+        <div className="manga-header-copy">
+          <p className="section-kicker">Library</p>
           <h1>My Manga List</h1>
           <p className="manga-subtitle">Track your reading progress and status at a glance.</p>
         </div>
         <div className="header-actions">
           <span className="manga-count">{stats.total} manga</span>
+          <span className="manga-count manga-count-soft">
+            {pagination.pages > 1 ? `${pagination.pages} pages` : 'Single page'}
+          </span>
         </div>
       </div>
 
@@ -223,6 +227,10 @@ function MangaList({ token }) {
 
       <div className="filter-panel">
         <div className="filter-header">
+          <div>
+            <p className="section-kicker">Filter</p>
+            <h3>Refine your library</h3>
+          </div>
           {(filters.status.length > 0 ||
             filters.sortBy !== 'createdAt' ||
             filters.search) && (

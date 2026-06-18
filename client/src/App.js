@@ -181,7 +181,7 @@ function App() {
                 title="Backend API status"
               >
                 <span className="api-status-dot" />
-                {apiStatus === 'checking' ? 'Checking API' : apiStatus === 'online' ? 'API online' : 'API offline'}
+                {apiStatus === 'checking' ? 'Checking' : apiStatus === 'online' ? 'Online' : 'Offline'}
               </span>
               <span>Welcome, {user.username}!</span>
               <button className="btn-logout" onClick={handleLogout}>

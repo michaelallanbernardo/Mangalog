@@ -113,12 +113,23 @@ function Browse({ token, searchQuery, onMangaAdded }) {
   return (
     <div className="browse-container">
       <div className="browse-header">
-        <h1>Browse Manga</h1>
-        <p>
-          {searchQuery && searchQuery.trim()
-            ? `Showing results for "${searchQuery.trim()}"`
-            : 'Discover and add manga to your collection'}
-        </p>
+        <div>
+          <p className="section-kicker">Discover</p>
+          <h1>Browse Manga</h1>
+          <p className="browse-subtitle">
+            {searchQuery && searchQuery.trim()
+              ? `Showing results for "${searchQuery.trim()}"`
+              : 'Discover and add manga to your collection'}
+          </p>
+        </div>
+        <div className="browse-summary">
+          <span className="summary-pill">
+            {searchQuery && searchQuery.trim() ? 'Search mode' : 'Trending'}
+          </span>
+          <span className="summary-pill summary-pill-soft">
+            {pagination?.last_page ? `Page ${currentPage} of ${pagination.last_page}` : 'Fresh picks'}
+          </span>
+        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
