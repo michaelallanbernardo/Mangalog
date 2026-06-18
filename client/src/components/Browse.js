@@ -21,15 +21,15 @@ function Browse({ token, searchQuery, onMangaAdded }) {
     }
   }, [token]);
 
-  const fetchTrending = useCallback(async () => {
+  const fetchTrending = useCallback(async (page = 1) => {
     try {
       setLoading(true);
       setError('');
-      const response = await fetch(`${API_URL}/browse/trending`);
+      const response = await fetch(`${API_URL}/browse/trending?page=${page}`);
       const data = await response.json();
       setResults(data.data || []);
       setPagination(data.pagination || null);
-      setCurrentPage(1);
+      setCurrentPage(page);
     } catch (err) {
       setError('Failed to load trending manga');
     } finally {
@@ -68,22 +68,18 @@ function Browse({ token, searchQuery, onMangaAdded }) {
   }, [searchQuery, fetchSearch, fetchTrending]);
 
   const handlePageChange = async (newPage) => {
+    const query = searchQuery && searchQuery.trim();
+
     try {
-      setLoading(true);
-      setError('');
-      const query = searchQuery && searchQuery.trim() ? searchQuery.trim() : '';
-      const response = await fetch(
-        `${API_URL}/browse/search?query=${encodeURIComponent(query)}&page=${newPage}`
-      );
-      const data = await response.json();
-      setResults(data.data || []);
-      setPagination(data.pagination || null);
-      setCurrentPage(newPage);
+      if (query) {
+        await fetchSearch(query, newPage);
+      } else {
+        await fetchTrending(newPage);
+      }
+
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (err) {
       setError('Failed to load page');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -242,7 +238,7 @@ function QuickAddModal({ manga, onAdd, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>
+        <button className="modal-close" onClick={onClose} aria-label="Close dialog">
           ×
         </button>
         <h2>Add "{manga.title}" to Your List</h2>

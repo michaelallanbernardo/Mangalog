@@ -9,12 +9,20 @@ import { API_URL, authAPI } from './api/api';
 function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
-  const [view, setView] = useState('login');
+  const [view, setView] = useState('landing');
   const [loading, setLoading] = useState(true);
   const [refreshList, setRefreshList] = useState(0);
   const [browseSearchInput, setBrowseSearchInput] = useState('');
   const [browseSearchQuery, setBrowseSearchQuery] = useState('');
   const [apiStatus, setApiStatus] = useState('checking');
+
+  const clearSession = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setToken(null);
+    setUser(null);
+    setView('landing');
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -24,6 +32,17 @@ function App() {
       const savedUser = localStorage.getItem('user');
 
       if (!savedToken || !savedUser) {
+        clearSession();
+        if (isMounted) {
+          setLoading(false);
+        }
+        return;
+      }
+
+      try {
+        JSON.parse(savedUser);
+      } catch (err) {
+        clearSession();
         if (isMounted) {
           setLoading(false);
         }
@@ -42,13 +61,10 @@ function App() {
         localStorage.setItem('user', JSON.stringify(currentUser));
         setView('manga');
       } catch (err) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        clearSession();
 
         if (isMounted) {
-          setToken(null);
-          setUser(null);
-          setView('login');
+          setView('landing');
         }
       } finally {
         if (isMounted) {
@@ -102,11 +118,7 @@ function App() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
-    setToken(null);
-    setView('login');
+    clearSession();
   };
 
   const handleMangaAdded = () => {
@@ -181,6 +193,26 @@ function App() {
       )}
 
       <main>
+        {view === 'landing' && !user && (
+          <section className="landing-page">
+            <div className="landing-card">
+              <p className="landing-kicker">Manga tracking, simplified</p>
+              <h1>Track the manga you read and the series you want next.</h1>
+              <p className="landing-copy">
+                Save your list, browse new titles, and keep your progress in one place.
+              </p>
+              <div className="landing-actions">
+                <button className="landing-btn-primary" onClick={() => setView('register')}>
+                  Register
+                </button>
+                <button className="landing-btn-secondary" onClick={() => setView('login')}>
+                  Login
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
+
         {view === 'login' && (
           <>
             <Login onLoginSuccess={handleLoginSuccess} />

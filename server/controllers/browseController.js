@@ -15,7 +15,8 @@ exports.searchPublicManga = async (req, res) => {
 // GET TRENDING MANGA
 exports.getTrendingManga = async (req, res) => {
   try {
-    const result = await fetchMangaFromAniList(1, "");
+    const { page = 1 } = req.query;
+    const result = await fetchMangaFromAniList(page, "");
     res.json(result);
   } catch (err) {
     res.status(500).json({ error: "Failed to fetch trending manga" });

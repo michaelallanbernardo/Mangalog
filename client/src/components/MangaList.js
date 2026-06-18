@@ -406,10 +406,9 @@ function EditModal({ manga, editData, onEditChange, onSave, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        <button className="modal-close" onClick={onClose}>
+        <button className="modal-close" onClick={onClose} aria-label="Close dialog">
           ×
         </button>
-        <h2>Edit "{manga.title}"</h2>
 
         <div className="edit-form">
           <div className="form-group">

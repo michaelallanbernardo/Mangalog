@@ -21,8 +21,12 @@ app.get("/api/status", (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
+console.log("Connecting to MongoDB...");
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    serverSelectionTimeoutMS: 10000,
+    connectTimeoutMS: 10000,
+  })
   .then(() => {
     console.log("MongoDB connected");
 
