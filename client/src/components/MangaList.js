@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { mangaAPI } from '../api/api';
+import PaginationControls from './PaginationControls';
 import './MangaList.css';
 
 function MangaList({ token }) {
@@ -182,12 +183,6 @@ function MangaList({ token }) {
           <h1>My Manga List</h1>
           <p className="manga-subtitle">Track your reading progress and status at a glance.</p>
         </div>
-        <div className="header-actions">
-          <span className="manga-count">{stats.total} manga</span>
-          <span className="manga-count manga-count-soft">
-            {pagination.pages > 1 ? `${pagination.pages} pages` : 'Single page'}
-          </span>
-        </div>
       </div>
 
       <div className="stats-grid">
@@ -359,37 +354,22 @@ function MangaList({ token }) {
             ))}
           </div>
 
-          {pagination.pages > 1 && (
-            <div className="pagination">
-              <button
-                onClick={() => handlePageChange(pagination.page - 1)}
-                disabled={pagination.page === 1}
-                className="btn-pagination"
-              >
-                Previous
-              </button>
-
-              <div className="page-numbers">
-                {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => handlePageChange(page)}
-                    className={`page-number ${pagination.page === page ? 'active' : ''}`}
-                  >
-                    {page}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.pages}
-                className="btn-pagination"
-              >
-                Next
-              </button>
-            </div>
-          )}
+          <PaginationControls
+            currentPage={pagination.page}
+            totalPages={pagination.pages}
+            onPageChange={handlePageChange}
+            summary={`Showing ${mangas.length > 0 ? (filters.page - 1) * filters.limit + 1 : 0}-${Math.min(
+              filters.page * filters.limit,
+              pagination.total
+            )} of ${pagination.total} manga`}
+            detail={
+              filters.search
+                ? `Filtered by "${filters.search}"${filters.status.length ? ` and ${filters.status.length} status filter${filters.status.length > 1 ? 's' : ''}` : ''}`
+                : filters.status.length > 0
+                  ? `${filters.status.length} status filter${filters.status.length > 1 ? 's' : ''} active`
+                  : 'Browse pages with a compact, focused control.'
+            }
+          />
         </>
       )}
 

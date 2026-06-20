@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { API_URL, mangaAPI } from '../api/api';
+import PaginationControls from './PaginationControls';
 import './Browse.css';
 
 function Browse({ token, searchQuery, onMangaAdded }) {
@@ -122,14 +123,6 @@ function Browse({ token, searchQuery, onMangaAdded }) {
               : 'Discover and add manga to your collection'}
           </p>
         </div>
-        <div className="browse-summary">
-          <span className="summary-pill">
-            {searchQuery && searchQuery.trim() ? 'Search mode' : 'Trending'}
-          </span>
-          <span className="summary-pill summary-pill-soft">
-            {pagination?.last_page ? `Page ${currentPage} of ${pagination.last_page}` : 'Fresh picks'}
-          </span>
-        </div>
       </div>
 
       {error && <div className="error-message">{error}</div>}
@@ -178,25 +171,11 @@ function Browse({ token, searchQuery, onMangaAdded }) {
           </div>
 
           {pagination && (
-            <div className="pagination">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="btn-pagination"
-              >
-                Previous
-              </button>
-              <span className="page-info">
-                Page {currentPage} of {pagination.last_page || '?'}
-              </span>
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={!pagination.has_next_page}
-                className="btn-pagination"
-              >
-                Next
-              </button>
-            </div>
+            <PaginationControls
+              currentPage={currentPage}
+              totalPages={pagination.last_page || currentPage}
+              onPageChange={handlePageChange}
+            />
           )}
         </>
       )}
